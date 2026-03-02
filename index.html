@@ -6,9 +6,48 @@
     <meta name="robots" content="index,follow,noarchive,nosnippet,noimageindex" />
     <link rel="canonical" href="https://youteneng.github.io/" />
     <title>肾友营养助手</title>
+    <script type="text/javascript">
+      (function(c, l, a, r, i, t, y) {
+        c[a] = c[a] || function() {
+          (c[a].q = c[a].q || []).push(arguments);
+        };
+        t = l.createElement(r);
+        t.async = 1;
+        t.src = "https://www.clarity.ms/tag/" + i;
+        y = l.getElementsByTagName(r)[0];
+        y.parentNode.insertBefore(t, y);
+      })(window, document, "clarity", "script", "vphw7oil58");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function(w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+          "gtm.start": new Date().getTime(),
+          event: "gtm.js",
+        });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-PHJTTQVF");
+    </script>
+    <!-- End Google Tag Manager -->
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-PHJTTQVF"
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div class="app-shell">
       <header class="topbar">
         <div class="brand" data-nav="home">
@@ -65,7 +104,7 @@
           </div>
 
           <div class="notice-bar">
-            当前版本适用对象：未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
+            当前版本适用对象：未接受透析治疗的成人慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
           </div>
         </section>
 
@@ -73,7 +112,7 @@
           <div class="view-head">
             <span class="view-eyebrow">Step 1</span>
             <h1>化验录入</h1>
-            <p>根据基础信息、eGFR 与关键化验结果，生成更贴近当前状态的营养目标。当前版本适用对象为未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。</p>
+            <p>根据基础信息、eGFR 与关键化验结果，生成更贴近当前状态的营养目标。当前版本适用对象为未接受透析治疗的成人慢性肾脏病患者（CKD 1-5期）；如已知前一日尿量，可用于更准确估算饮水量。</p>
           </div>
           <form id="lab-form" class="form-stack">
             <article class="card form-card">
@@ -100,6 +139,21 @@
                   <span>是否有高血压</span>
                   <input name="hypertension" type="checkbox" />
                   <span class="toggle-ui" aria-hidden="true"></span>
+                </label>
+                <label class="toggle-field">
+                  <span>是否合并糖尿病</span>
+                  <input name="diabetes" type="checkbox" />
+                  <span class="toggle-ui" aria-hidden="true"></span>
+                </label>
+                <label class="toggle-field">
+                  <span>是否少尿</span>
+                  <input name="oliguria" type="checkbox" />
+                  <span class="toggle-ui" aria-hidden="true"></span>
+                </label>
+                <label class="field">
+                  <span>前一日尿量 (mL)</span>
+                  <input name="urineOutput" type="number" min="0" step="1" placeholder="例如 1200" />
+                  <small>如已知可填写，用于估算饮水量；未知可留空</small>
                 </label>
               </div>
             </article>
@@ -182,7 +236,7 @@
           <div class="view-head view-head-tight">
             <span class="view-eyebrow">Step 2</span>
             <h1>饮食方案</h1>
-            <p>基于 CKD 分期、化验风险与交换份逻辑，给出当日饮食预算和可替换方案。当前版本适用对象为未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。</p>
+            <p>基于 CKD 分期、化验风险与交换份逻辑，给出当日饮食预算和可替换方案。当前版本适用对象为未接受透析治疗的成人慢性肾脏病患者（CKD 1-5期）。</p>
           </div>
           <div class="plan-primary">
             <article class="card budget-card">
@@ -222,27 +276,6 @@
           </div>
 
           <section class="plan-secondary">
-            <div class="section-title section-title-secondary">
-              <span class="section-icon section-icon-library" aria-hidden="true"></span>
-              <div>
-                <h2>辅助工具</h2>
-                <p class="section-copy">食材数据库用于查找替换项和复核交换份，默认折叠以保持主流程专注。</p>
-              </div>
-            </div>
-            <details class="card tools-disclosure">
-              <summary>展开交换食材数据库</summary>
-              <div class="database-card-inner">
-                <div class="database-toolbar">
-                  <label class="field search-field">
-                    <span>搜索食材</span>
-                    <input id="food-search" type="search" placeholder="输入 苹果、鸡蛋清、挂面、冬瓜 等" />
-                  </label>
-                </div>
-                <div id="food-summary" class="food-summary"></div>
-                <div id="food-results" class="food-results"></div>
-              </div>
-            </details>
-
             <div class="section-title section-title-secondary premium-section-head">
               <span class="section-icon section-icon-premium" aria-hidden="true"></span>
               <div>
@@ -290,7 +323,7 @@
             <p>除了个体化饮食建议，也为长期管理提供更轻量的交流与支持入口。</p>
           </div>
           <div class="notice-bar">
-            当前版本适用对象：未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
+            当前版本适用对象：未接受透析治疗的成人慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
           </div>
 
           <div class="community-grid">
@@ -368,11 +401,8 @@
 
     <div id="feature-toast" class="feature-toast" hidden role="status" aria-live="polite">敬请期待高阶版本</div>
 
-    <script>
-      window.CKD_BAIDU_ANALYTICS_ID = "518c1a8f2fbf8068280278370c342fce";
-    </script>
-    <script src="./analytics.js"></script>
     <script src="./foods-data.js"></script>
+    <script src="./analytics.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

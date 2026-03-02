@@ -1,5 +1,13 @@
 const foodDatabase = window.FOOD_DATABASE || [];
-const analytics = window.CKDAnalytics;
+const foodExchangeReference = window.FOOD_EXCHANGE_REFERENCE || [];
+const nutritionLabelGuidance = window.NUTRITION_LABEL_GUIDANCE || [];
+const guidelineRecipes = window.GUIDELINE_RECIPES || {};
+const guidelineDayPlans = window.GUIDELINE_DAY_PLANS || [];
+const analytics = window.CKDAnalytics || {
+  bootstrap() {},
+  track() {},
+  trackPageView() {},
+};
 
 const mealCatalog = {
   breakfast: {
@@ -124,6 +132,11 @@ const mealCatalog = {
   },
 };
 
+Object.entries(guidelineRecipes).forEach(([mealKey, items]) => {
+  if (!mealCatalog[mealKey] || !Array.isArray(items)) return;
+  mealCatalog[mealKey].items.push(...items);
+});
+
 const state = {
   activeView: "home",
   profile: null,
@@ -143,6 +156,10 @@ const state = {
     potassium: 0,
     phosphorus: 0,
   },
+  dayPlanFilters: {
+    region: "all",
+    season: "all",
+  },
 };
 
 const mealKeyOrder = ["breakfast", "lunch", "dinner", "snack"];
@@ -157,32 +174,94 @@ function inferStage(egfr) {
 }
 
 function getIdealWeight(profile) {
-  return profile.sex === "male" ? profile.height - 105 : profile.height - 107;
+  return profile.height - 105;
 }
 
-function getProteinPerKg(stage) {
-  return stage <= 2 ? 0.8 : 0.6;
+function getProteinPlan(profile, stage, idealWeight) {
+  if (stage <= 2) {
+    const protein = +(idealWeight * 0.8).toFixed(1);
+    return {
+      protein,
+      proteinMin: protein,
+      proteinMax: protein,
+      proteinDisplay: `${protein} g`,
+      proteinLimit: protein,
+      proteinUpperSafe: +(idealWeight * 1.3).toFixed(1),
+    };
+  }
+
+  if (profile.diabetes) {
+    const proteinMin = +(idealWeight * 0.6).toFixed(1);
+    const proteinMax = +(idealWeight * 0.8).toFixed(1);
+    const protein = +(((proteinMin + proteinMax) / 2).toFixed(1));
+    return {
+      protein,
+      proteinMin,
+      proteinMax,
+      proteinDisplay: `${proteinMin}-${proteinMax} g`,
+      proteinLimit: proteinMax,
+      proteinUpperSafe: null,
+    };
+  }
+
+  const protein = +(idealWeight * 0.6).toFixed(1);
+  return {
+    protein,
+    proteinMin: protein,
+    proteinMax: protein,
+    proteinDisplay: `${protein} g`,
+    proteinLimit: protein,
+    proteinUpperSafe: null,
+  };
 }
 
 function calculateTargets(profile) {
   const idealWeight = Math.max(35, Math.round(getIdealWeight(profile)));
   const stage = inferStage(profile.egfr);
-  const protein = +(idealWeight * getProteinPerKg(stage)).toFixed(1);
-  const energyBase = stage >= 4 ? 33 : 35;
-  const energy = Math.round(idealWeight * energyBase);
-  const sodium = profile.hypertension || profile.edema ? 2000 : 2200;
-  const potassium = profile.hyperkalemia ? 2000 : 2200;
-  const phosphorus = profile.hyperphosphatemia || stage >= 4 ? 800 : 900;
+  const proteinPlan = getProteinPlan(profile, stage, idealWeight);
+  const energyMin = Math.round(idealWeight * 30);
+  const energyMax = Math.round(idealWeight * 35);
+  const energyRecommended = Math.round((energyMin + energyMax) / 2);
+  const sodium = 2300;
+  const potassiumRestricted = Boolean(profile.hyperkalemia);
+  const phosphorusRestricted = Boolean(profile.hyperphosphatemia || stage >= 3);
+  const potassiumMin = potassiumRestricted ? 2000 : null;
+  const potassiumMax = potassiumRestricted ? 3000 : null;
+  const phosphorusMin = phosphorusRestricted ? 800 : null;
+  const phosphorusMax = phosphorusRestricted ? 1000 : null;
+  const fluidRestricted = Boolean(profile.edema || profile.oliguria);
+  const urineBasedFluid = profile.urineOutput != null ? Math.round(profile.urineOutput + 500) : null;
+  const fluidMin = fluidRestricted ? urineBasedFluid : 1500;
+  const fluidMax = fluidRestricted ? urineBasedFluid : 1700;
+  const phosphorus = phosphorusRestricted ? 1000 : null;
+  const potassium = potassiumRestricted ? 3000 : null;
 
   return {
     stage,
     idealWeight,
-    energy,
-    protein,
+    energy: energyRecommended,
+    energyMin,
+    energyMax,
+    protein: proteinPlan.protein,
+    proteinMin: proteinPlan.proteinMin,
+    proteinMax: proteinPlan.proteinMax,
+    proteinDisplay: proteinPlan.proteinDisplay,
+    proteinLimit: proteinPlan.proteinLimit,
     sodium,
     potassium,
     phosphorus,
-    qualityProtein: +(protein * 0.65).toFixed(1),
+    qualityProtein: +(proteinPlan.protein * 0.5).toFixed(1),
+    proteinUpperSafe: proteinPlan.proteinUpperSafe,
+    potassiumRestricted,
+    potassiumMin,
+    potassiumMax,
+    phosphorusRestricted,
+    phosphorusMin,
+    phosphorusMax,
+    fluidRestricted,
+    urineBasedFluid,
+    fluidMin,
+    fluidMax,
   };
 }
 
@@ -192,10 +271,11 @@ function pickInitialIndex(mealKey, profile) {
 
 function getMealOptions(mealKey, profile) {
   return mealCatalog[mealKey].items.filter((item) => {
-    if (profile.stage >= 4 && item.flags.includes("stage45")) return true;
+    if (profile.stage >= 3 && item.flags.includes("stage45")) return true;
     if (profile.hyperkalemia && item.flags.includes("lowK")) return true;
-    if (profile.hyperphosphatemia && item.flags.includes("lowP")) return true;
-    return item.flags.includes("default") || item.flags.includes("lowNa");
+    if ((profile.hyperphosphatemia || profile.stage >= 3) && item.flags.includes("lowP")) return true;
+    if ((profile.hypertension || profile.edema) && item.flags.includes("lowNa")) return true;
+    return item.flags.includes("default");
   });
 }
 
@@ -212,6 +292,9 @@ function parseForm(form) {
     height: Number(data.get("height")),
     edema: data.get("edema") === "on",
     hypertension: data.get("hypertension") === "on",
+    diabetes: data.get("diabetes") === "on",
+    oliguria: data.get("oliguria") === "on",
+    urineOutput: normalizeNumber(data.get("urineOutput")),
     creatinine: normalizeNumber(data.get("creatinine")),
     bun: normalizeNumber(data.get("bun")),
     egfr: normalizeNumber(data.get("egfr")),
@@ -248,8 +331,15 @@ function setActiveView(view) {
   document.querySelectorAll(".nav-tab").forEach((node) => {
     node.classList.toggle("is-active", node.dataset.nav === view);
   });
-  analytics.track("view_change", { view });
-  analytics.trackPageView(`/${view}`);
+  const pageNameMap = {
+    home: "home",
+    labs: "lab_input",
+    plan: "diet_plan",
+    community: "community",
+  };
+  const pageName = pageNameMap[view];
+  if (!pageName) return;
+  analytics.trackPageView(pageName, { page_name: pageName });
 }
 
 function setCommunityModal(open) {
@@ -257,7 +347,6 @@ function setCommunityModal(open) {
   const modal = document.getElementById("community-modal");
   modal.hidden = !open;
   document.body.style.overflow = open ? "hidden" : "";
-  analytics.track(open ? "community_modal_open" : "community_modal_close", { source: state.activeView });
 }
 
 function showFeatureToast(message = "敬请期待高阶版本") {
@@ -279,11 +368,29 @@ function renderBudget() {
   const budgetGrid = document.getElementById("budget-grid");
   const { targets } = state;
   const items = [
-    ["热量", formatValue(targets.energy, " kcal")],
-    ["蛋白质", formatValue(targets.protein, " g")],
-    ["钠", formatValue(targets.sodium, " mg")],
-    ["钾", formatValue(targets.potassium, " mg")],
-    ["磷", formatValue(targets.phosphorus, " mg")],
+    ["热量", `${targets.energyMin}-${targets.energyMax} kcal`],
+    ["蛋白质", targets.proteinDisplay],
+    ["钠", `≤${targets.sodium} mg`],
+    [
+      "钾",
+      targets.potassiumRestricted
+        ? `${targets.potassiumMin}-${targets.potassiumMax} mg`
+        : "通常不限制",
+    ],
+    [
+      "磷",
+      targets.phosphorusRestricted
+        ? `≤${targets.phosphorusMax} mg`
+        : "个体化",
+    ],
+    [
+      "液体",
+      targets.fluidRestricted
+        ? targets.urineBasedFluid != null
+          ? `约 ${targets.urineBasedFluid} mL`
+          : "按尿量与水肿调整"
+        : `${targets.fluidMin}-${targets.fluidMax} mL`,
+    ],
   ];
 
   budgetGrid.innerHTML = items
@@ -299,11 +406,27 @@ function renderBudget() {
 
   const notes = [
     `根据 eGFR 推断当前为 CKD ${targets.stage} 期。`,
-    `理想体重约 ${targets.idealWeight} kg，蛋白建议 ${targets.protein} g/天，其中优质蛋白约 ${targets.qualityProtein} g/天。`,
+    `理想体重按身高-105 估算，约 ${targets.idealWeight} kg。能量建议 ${targets.energyMin}-${targets.energyMax} kcal/天。`,
   ];
-  if (state.profile.hyperkalemia) notes.push("当前血钾偏高，已优先筛选低钾食谱与低钾食材。");
-  if (state.profile.hyperphosphatemia) notes.push("当前血磷偏高，已优先筛选低磷方案。");
-  if (state.profile.hypertension || state.profile.edema) notes.push("存在高血压或浮肿，钠摄入按更严格目标控制。");
+  if (targets.stage <= 2) {
+    notes.push(`蛋白建议 ${targets.protein} g/天，并避免长期高蛋白饮食（>${targets.proteinUpperSafe} g/天）。`);
+  } else if (state.profile.diabetes) {
+    notes.push(`合并糖尿病时，蛋白建议 ${targets.proteinMin}-${targets.proteinMax} g/天，当前按中间值 ${targets.protein} g/天估算。`);
+  } else {
+    notes.push(`蛋白建议 ${targets.protein} g/天，其中优质蛋白不少于 ${targets.qualityProtein} g/天。`);
+  }
+  if (targets.potassiumRestricted) notes.push("当前血钾偏高，已按指南限制钾摄入并优先筛选低钾方案。");
+  if (targets.phosphorusRestricted) notes.push("当前阶段或化验提示需控制磷摄入，已优先筛选低磷食谱与食材。");
+  if (!targets.potassiumRestricted && targets.stage <= 2) notes.push("当前阶段通常无需常规限钾，可结合化验结果动态调整。");
+  if (!state.profile.hyperphosphatemia && targets.stage <= 2) notes.push("当前阶段磷摄入以个体化管理为主，无需默认严格限磷。");
+  if (state.profile.oliguria || state.profile.edema) {
+    if (targets.urineBasedFluid != null) {
+      notes.push(`结合少尿/水肿情况，饮水量暂按前一日尿量+500 mL 估算，约 ${targets.urineBasedFluid} mL/天。`);
+    } else {
+      notes.push("存在少尿或水肿时，饮水量需结合前一日尿量和临床建议个体化调整。");
+    }
+  }
+  if (state.profile.hypertension) notes.push("钠摄入以不超过 2300 mg/天为基础，并应结合血压控制情况进一步管理。");
 
   document.getElementById("stage-copy").textContent = notes.join(" ");
 }
@@ -337,6 +460,7 @@ function renderMeals() {
                 <span class="tag">磷 ${recipe.nutrients.phosphorus}mg</span>
               </div>
               <div class="ingredient-copy">食材份量：${recipe.ingredients.join(" · ")}</div>
+              ${recipe.sourceNote ? `<div class="meal-source-note">${recipe.sourceNote}</div>` : ""}
             </div>
             <div class="meal-actions">
               <button class="button button-light meal-button" type="button" data-action="swap" data-meal="${mealKey}">换一换</button>
@@ -349,6 +473,101 @@ function renderMeals() {
     .join("");
 }
 
+function getStageGroup() {
+  return state.targets && state.targets.stage <= 2 ? "1-2" : "3-5";
+}
+
+function getDayPlanFilters() {
+  const stageGroup = getStageGroup();
+  return guidelineDayPlans.filter((plan) => {
+    if (plan.stageGroup !== stageGroup) return false;
+    if (state.dayPlanFilters.region !== "all" && plan.region !== state.dayPlanFilters.region) return false;
+    if (state.dayPlanFilters.season !== "all" && plan.season !== state.dayPlanFilters.season) return false;
+    return true;
+  });
+}
+
+function hydrateDayPlanOptions() {
+  const regionSelect = document.getElementById("day-plan-region");
+  const seasonSelect = document.getElementById("day-plan-season");
+  if (!regionSelect || !seasonSelect) return;
+
+  const stageGroup = getStageGroup();
+  const stagePlans = guidelineDayPlans.filter((plan) => plan.stageGroup === stageGroup);
+  const regions = [...new Set(stagePlans.map((plan) => plan.region))];
+  const seasons = [...new Set(stagePlans.map((plan) => plan.season))];
+
+  regionSelect.innerHTML = `<option value="all">全部地区</option>${regions
+    .map((region) => `<option value="${region}">${region}</option>`)
+    .join("")}`;
+  seasonSelect.innerHTML = `<option value="all">全部季节</option>${seasons
+    .map((season) => `<option value="${season}">${season}</option>`)
+    .join("")}`;
+
+  regionSelect.value = regions.includes(state.dayPlanFilters.region) ? state.dayPlanFilters.region : "all";
+  seasonSelect.value = seasons.includes(state.dayPlanFilters.season) ? state.dayPlanFilters.season : "all";
+  state.dayPlanFilters.region = regionSelect.value;
+  state.dayPlanFilters.season = seasonSelect.value;
+}
+
+function renderDayPlans() {
+  hydrateDayPlanOptions();
+  const plans = getDayPlanFilters();
+  const stageGroup = getStageGroup();
+  const summary = document.getElementById("day-plan-summary");
+  const results = document.getElementById("day-plan-results");
+  if (!summary || !results) return;
+
+  summary.textContent = `当前按 CKD ${stageGroup} 期口径筛选，找到 ${plans.length} 组地区 / 季节整天方案。`;
+  if (plans.length === 0) {
+    results.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon" aria-hidden="true"></div>
+        <strong>暂无匹配的整天方案</strong>
+        <p>可以切换地区或季节查看其他指南示例，或先使用下方单餐推荐完成当天安排。</p>
+      </div>
+    `;
+    return;
+  }
+
+  results.innerHTML = plans
+    .map(
+      (plan) => `
+        <article class="day-plan-item">
+          <div class="day-plan-item-head">
+            <div>
+              <strong>${plan.title}</strong>
+              <p>${plan.sourceNote}</p>
+            </div>
+            <div class="day-plan-badges">
+              <span class="tag">${plan.region}</span>
+              <span class="tag">${plan.season}</span>
+              <span class="tag">CKD ${plan.stageGroup} 期</span>
+            </div>
+          </div>
+          <div class="day-plan-meals">
+            <div><span>早餐</span><strong>${plan.meals.breakfast}</strong></div>
+            <div><span>上午加餐</span><strong>${plan.meals.snack1}</strong></div>
+            <div><span>午餐</span><strong>${plan.meals.lunch}</strong></div>
+            <div><span>下午加餐</span><strong>${plan.meals.snack2}</strong></div>
+            <div><span>晚餐</span><strong>${plan.meals.dinner}</strong></div>
+          </div>
+          <div class="day-plan-highlights">
+            ${plan.highlights.map((item) => `<span class="tag">${item}</span>`).join("")}
+          </div>
+          <div class="day-plan-totals">
+            <span>能量 ${plan.totals.energy} kcal</span>
+            <span>蛋白 ${plan.totals.protein} g</span>
+            <span>钠 ${plan.totals.sodium} mg</span>
+            <span>钾 ${plan.totals.potassium} mg</span>
+            <span>磷 ${plan.totals.phosphorus} mg</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function clampRatio(current, target) {
   if (target <= 0) return 0;
   return Math.min(current / target, 1);
@@ -357,8 +576,8 @@ function clampRatio(current, target) {
 function renderIntake() {
   const targets = state.targets;
   const metrics = [
-    ["总热量", "energy", targets.energy, "kcal"],
-    ["总蛋白质", "protein", targets.protein, "g"],
+    ["总热量", "energy", targets.energyMax, "kcal"],
+    ["总蛋白质", "protein", targets.proteinLimit, "g"],
     ["总钠", "sodium", targets.sodium, "mg"],
     ["总钾", "potassium", targets.potassium, "mg"],
     ["总磷", "phosphorus", targets.phosphorus, "mg"],
@@ -367,6 +586,20 @@ function renderIntake() {
   document.getElementById("intake-stats").innerHTML = metrics
     .map(([label, key, target, unit]) => {
       const current = +state.intake[key].toFixed(1);
+      const unrestricted = target == null;
+      if (unrestricted) {
+        return `
+          <div class="progress-row">
+            <div class="progress-label">
+              <span>${label}</span>
+              <span>${current} ${unit} / 个体化管理</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        `;
+      }
       const over = current > target;
       return `
         <div class="progress-row">
@@ -383,10 +616,10 @@ function renderIntake() {
     .join("");
 
   const warnings = [];
-  if (state.intake.protein > targets.protein) warnings.push("总蛋白质");
+  if (state.intake.protein > targets.proteinLimit) warnings.push("总蛋白质");
   if (state.intake.sodium > targets.sodium) warnings.push("总钠");
-  if (state.intake.potassium > targets.potassium) warnings.push("总钾");
-  if (state.intake.phosphorus > targets.phosphorus) warnings.push("总磷");
+  if (targets.potassium != null && state.intake.potassium > targets.potassium) warnings.push("总钾");
+  if (targets.phosphorus != null && state.intake.phosphorus > targets.phosphorus) warnings.push("总磷");
 
   const warningBox = document.getElementById("intake-warning");
   if (warnings.length > 0) {
@@ -401,9 +634,9 @@ function renderIntake() {
 function scoreFood(item, profile) {
   let score = item.sodium * 0.2 + item.protein * 2;
   if (profile.hyperkalemia) score += item.potassium;
-  if (profile.hyperphosphatemia) score += item.phosphorus * 1.2;
+  if (profile.hyperphosphatemia || profile.stage >= 3) score += item.phosphorus * 1.2;
   if (profile.hypertension || profile.edema) score += item.sodium;
-  if (profile.stage >= 4) score += item.protein * 6;
+  if (profile.stage >= 3) score += item.protein * 6;
   return score;
 }
 
@@ -414,10 +647,10 @@ function filterFoods(query) {
     return item.name.toLowerCase().includes(normalized) || item.category.toLowerCase().includes(normalized);
   });
 
-  if (state.profile.hyperkalemia) {
+  if (state.targets?.potassiumRestricted) {
     items = items.filter((item) => !item.tags.includes("highK") && !item.tags.includes("veryHighK"));
   }
-  if (state.profile.hyperphosphatemia) {
+  if (state.targets?.phosphorusRestricted) {
     items = items.filter((item) => !item.tags.includes("highP") && !item.tags.includes("veryHighP"));
   }
   if (state.profile.hypertension || state.profile.edema) {
@@ -435,15 +668,222 @@ function groupFoods(items) {
   }, {});
 }
 
+function renderFoodKnowledge() {
+  const labelContainer = document.getElementById("label-guide-cards");
+  const exchangeContainer = document.getElementById("exchange-reference-cards");
+  if (!labelContainer || !exchangeContainer) return;
+
+  labelContainer.innerHTML = nutritionLabelGuidance
+    .map(
+      (section) => `
+        <article class="knowledge-card">
+          <div class="knowledge-card-head">
+            <strong>${section.title}</strong>
+            <span>指南第 ${section.sourcePage} 页</span>
+          </div>
+          <ul class="knowledge-list">
+            ${section.items.map((item) => `<li>${item}</li>`).join("")}
+          </ul>
+        </article>
+      `,
+    )
+    .join("");
+
+  exchangeContainer.innerHTML = foodExchangeReference
+    .map(
+      (section) => `
+        <article class="exchange-card">
+          <div class="exchange-card-head">
+            <strong>${section.title}</strong>
+            <span>指南第 ${section.sourcePage} 页</span>
+          </div>
+          <p>${section.summary}</p>
+          <ul class="exchange-list">
+            ${section.rows.map((row) => `<li>${row}</li>`).join("")}
+          </ul>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function flattenExchangeEntries() {
+  return foodExchangeReference.flatMap((section) =>
+    section.rows.map((row, index) => ({
+      id: `${section.sourcePage}-${index}`,
+      title: section.title,
+      summary: section.summary,
+      row,
+      sourcePage: section.sourcePage,
+    })),
+  );
+}
+
+function flattenGuidelineRecipeEntries() {
+  return Object.entries(guidelineRecipes).flatMap(([mealKey, items]) =>
+    items.map((item) => ({
+      ...item,
+      mealKey,
+    })),
+  );
+}
+
+function matchesQuery(parts, query) {
+  if (!query) return true;
+  return parts.join(" ").toLowerCase().includes(query);
+}
+
+function renderExchangeSearch(query) {
+  const entries = flattenExchangeEntries()
+    .filter((entry) => matchesQuery([entry.title, entry.summary, entry.row], query))
+    .slice(0, 18);
+  const container = document.getElementById("exchange-search-results");
+  if (!container) return;
+  if (entries.length === 0) {
+    container.innerHTML = `
+      <div class="guide-empty">
+        <strong>未找到匹配的交换份条目</strong>
+        <p>可以尝试输入“面制品”“水果”“调味料”这类关键词。</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = entries
+    .map(
+      (entry) => `
+        <article class="guide-card">
+          <div class="guide-card-head">
+            <strong>${entry.title}</strong>
+            <span>指南第 ${entry.sourcePage} 页</span>
+          </div>
+          <p>${entry.row}</p>
+          <small>${entry.summary}</small>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderRecipeSearch(query) {
+  const entries = flattenGuidelineRecipeEntries()
+    .filter((entry) =>
+      matchesQuery(
+        [
+          entry.title,
+          entry.subtitle,
+          entry.mealKey,
+          entry.ingredients.join(" "),
+          entry.sourceNote || "",
+        ],
+        query,
+      ),
+    )
+    .slice(0, 16);
+  const container = document.getElementById("recipe-search-results");
+  if (!container) return;
+  if (entries.length === 0) {
+    container.innerHTML = `
+      <div class="guide-empty">
+        <strong>未找到匹配的指南食谱</strong>
+        <p>可以尝试输入“早餐”“龙井虾仁”“华南”等关键词。</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = entries
+    .map(
+      (entry) => `
+        <article class="guide-card">
+          <div class="guide-card-head">
+            <strong>${entry.title}</strong>
+            <span>${mealCatalog[entry.mealKey]?.label || entry.mealKey}</span>
+          </div>
+          <p>${entry.subtitle}</p>
+          <small>食材：${entry.ingredients.join(" · ")}</small>
+          <div class="guide-meta-row">
+            <span>${entry.nutrients.energy} kcal</span>
+            <span>蛋白 ${entry.nutrients.protein}g</span>
+            <span>钠 ${entry.nutrients.sodium}mg</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderDayPlanSearch(query) {
+  const entries = guidelineDayPlans
+    .filter((entry) =>
+      matchesQuery(
+        [
+          entry.title,
+          entry.region,
+          entry.season,
+          entry.stageGroup,
+          entry.meals.breakfast,
+          entry.meals.lunch,
+          entry.meals.dinner,
+          entry.sourceNote,
+        ],
+        query,
+      ),
+    )
+    .slice(0, 12);
+  const container = document.getElementById("dayplan-search-results");
+  if (!container) return;
+  if (entries.length === 0) {
+    container.innerHTML = `
+      <div class="guide-empty">
+        <strong>未找到匹配的整天方案</strong>
+        <p>可以尝试输入“夏季”“东北”“3-5”等关键词。</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = entries
+    .map(
+      (entry) => `
+        <article class="guide-card">
+          <div class="guide-card-head">
+            <strong>${entry.title}</strong>
+            <span>${entry.season} · CKD ${entry.stageGroup} 期</span>
+          </div>
+          <p>${entry.region} · ${entry.sourceNote}</p>
+          <small>早餐：${entry.meals.breakfast}</small>
+          <small>午餐：${entry.meals.lunch}</small>
+          <small>晚餐：${entry.meals.dinner}</small>
+          <div class="guide-meta-row">
+            <span>${entry.totals.energy} kcal</span>
+            <span>蛋白 ${entry.totals.protein}g</span>
+            <span>钠 ${entry.totals.sodium}mg</span>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderFoodDatabase() {
-  const query = document.getElementById("food-search").value;
+  const searchField = document.getElementById("food-search");
+  const foodSummary = document.getElementById("food-summary");
+  const foodResults = document.getElementById("food-results");
+  if (!searchField || !foodSummary || !foodResults) return;
+  const query = document.getElementById("food-search").value.trim().toLowerCase();
   const items = filterFoods(query).slice(0, 72);
   const grouped = groupFoods(items);
   const groups = Object.entries(grouped);
 
-  document.getElementById("food-summary").textContent = `已根据当前化验条件筛选更适合的交换食材，当前展示 ${items.length} 条结果。`;
+  renderFoodKnowledge();
+  foodSummary.textContent =
+    `当前数据库已覆盖食材、交换份、指南单餐食谱和整天方案。食材结果 ${items.length} 条，交换份 ${flattenExchangeEntries().length} 条，单餐食谱 ${flattenGuidelineRecipeEntries().length} 条，整天方案 ${guidelineDayPlans.length} 条。`;
+  renderExchangeSearch(query);
+  renderRecipeSearch(query);
+  renderDayPlanSearch(query);
   if (groups.length === 0) {
-    document.getElementById("food-results").innerHTML = `
+    foodResults.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon" aria-hidden="true"></div>
         <strong>未找到匹配食材</strong>
@@ -453,7 +893,7 @@ function renderFoodDatabase() {
     return;
   }
 
-  document.getElementById("food-results").innerHTML = groups
+  foodResults.innerHTML = groups
     .map(
       ([category, group]) => `
         <section class="food-group">
@@ -501,7 +941,6 @@ function renderPlanView() {
   renderBudget();
   renderMeals();
   renderIntake();
-  renderFoodDatabase();
 }
 
 function getCurrentPlanTotals() {
@@ -533,21 +972,27 @@ function resetIntake() {
 function buildPlan(profile) {
   state.profile = profile;
   state.targets = calculateTargets(profile);
+  state.dayPlanFilters = { region: "all", season: "all" };
   mealKeyOrder.forEach((mealKey) => {
     state.mealSelections[mealKey] = pickInitialIndex(mealKey, profile);
   });
   resetIntake();
   renderPlanView();
   const planTotals = getCurrentPlanTotals();
-  analytics.track("meal_plan_generated", {
-    stage: state.targets.stage,
-    hyperkalemia: profile.hyperkalemia,
-    hyperphosphatemia: profile.hyperphosphatemia,
-    hypertension: profile.hypertension,
-    edema: profile.edema,
-    proteinTarget: state.targets.protein,
-    planProtein: planTotals.protein,
-    planEnergy: planTotals.energy,
+  analytics.track("state_plan_generated", {
+    page_name: "diet_plan",
+    ckd_stage: state.targets.stage,
+    stage_group: state.targets.stage <= 2 ? "1_2" : "3_5",
+    has_hyperkalemia: profile.hyperkalemia,
+    has_hyperphosphatemia: profile.hyperphosphatemia,
+    has_hypertension: profile.hypertension,
+    has_edema: profile.edema,
+    has_diabetes: profile.diabetes,
+    has_oliguria: profile.oliguria,
+    urine_output: profile.urineOutput,
+    protein_target: state.targets.proteinLimit,
+    plan_protein: planTotals.protein,
+    plan_energy: planTotals.energy,
   });
   setActiveView("plan");
 }
@@ -558,11 +1003,11 @@ function handleSwap(mealKey) {
   const previousRecipe = getSelectedMeal(mealKey);
   state.mealSelections[mealKey] = (state.mealSelections[mealKey] + 1) % options.length;
   const nextRecipe = getSelectedMeal(mealKey);
-  analytics.track("recipe_swap", {
-    mealKey,
-    fromRecipeId: previousRecipe?.id,
-    toRecipeId: nextRecipe?.id,
-    toRecipeName: nextRecipe?.title,
+  analytics.track("click_replace_meal", {
+    page_name: "diet_plan",
+    meal_type: mealKey,
+    recipe_name: nextRecipe?.title,
+    previous_recipe_name: previousRecipe?.title,
   });
   renderMeals();
 }
@@ -572,25 +1017,13 @@ function handleLog(mealKey) {
   Object.keys(state.intake).forEach((key) => {
     state.intake[key] += recipe.nutrients[key];
   });
-  analytics.track("nutrition_intake_logged", {
-    mealKey,
-    recipeId: recipe.id,
-    recipeName: recipe.title,
-    protein: recipe.nutrients.protein,
-    energy: recipe.nutrients.energy,
+  analytics.track("click_record_intake", {
+    page_name: "diet_plan",
+    meal_type: mealKey,
+    recipe_name: recipe.title,
+    recipe_energy: recipe.nutrients.energy,
+    recipe_protein: recipe.nutrients.protein,
   });
-  const overLimitTriggered =
-    state.intake.protein > state.targets.protein ||
-    state.intake.sodium > state.targets.sodium ||
-    state.intake.potassium > state.targets.potassium ||
-    state.intake.phosphorus > state.targets.phosphorus;
-  if (overLimitTriggered) {
-    analytics.track("nutrition_over_limit_triggered", {
-      mealKey,
-      recipeId: recipe.id,
-      recipeName: recipe.title,
-    });
-  }
   renderIntake();
 }
 
@@ -607,13 +1040,25 @@ function bindEvents() {
   });
 
   document.getElementById("start-use-btn").addEventListener("click", () => {
-    analytics.track("home_cta_start_use_click", { source: "home_hero" });
+    analytics.track("click_start_use", {
+      page_name: "home",
+      entry_location: "home_hero",
+    });
     setActiveView("labs");
   });
 
   document.querySelectorAll("[data-open-community]").forEach((node) => {
     node.addEventListener("click", () => {
-      analytics.track("community_entry_click", { source: node.id || node.textContent.trim() });
+      analytics.track("click_join_community", {
+        page_name:
+          {
+            home: "home",
+            labs: "lab_input",
+            plan: "diet_plan",
+            community: "community",
+          }[state.activeView] || state.activeView,
+        entry_location: node.id || node.textContent.trim(),
+      });
       setCommunityModal(true);
     });
   });
@@ -626,8 +1071,21 @@ function bindEvents() {
 
   document.getElementById("lab-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    analytics.track("lab_form_submit", { source: "lab_form" });
-    buildPlan(parseForm(event.currentTarget));
+    const profile = parseForm(event.currentTarget);
+    analytics.track("submit_lab_input", {
+      page_name: "lab_input",
+      module_name: "lab_form",
+      ckd_stage: profile.stage,
+      stage_group: profile.stage <= 2 ? "1_2" : "3_5",
+      has_hyperkalemia: profile.hyperkalemia,
+      has_hyperphosphatemia: profile.hyperphosphatemia,
+      has_hypertension: profile.hypertension,
+      has_edema: profile.edema,
+      has_diabetes: profile.diabetes,
+      has_oliguria: profile.oliguria,
+      urine_output: profile.urineOutput,
+    });
+    buildPlan(profile);
   });
 
   document.getElementById("meal-sections").addEventListener("click", (event) => {
@@ -635,35 +1093,55 @@ function bindEvents() {
     if (!button) return;
     const mealKey = button.dataset.meal;
     const action = button.dataset.action;
-    const recipe = getSelectedMeal(mealKey);
-    analytics.track("recipe_click", {
-      mealKey,
-      action,
-      recipeId: recipe?.id,
-      recipeName: recipe?.title,
-    });
     if (action === "swap") handleSwap(mealKey);
     if (action === "log") handleLog(mealKey);
   });
 
-  document.getElementById("food-search").addEventListener("input", () => {
-    if (!state.profile) return;
-    analytics.track("food_search", { query: document.getElementById("food-search").value.trim() });
-    renderFoodDatabase();
-  });
+  const foodSearch = document.getElementById("food-search");
+  if (foodSearch) {
+    foodSearch.addEventListener("input", () => {
+      if (!state.profile) return;
+      renderFoodDatabase();
+    });
+  }
 
-  document.querySelectorAll('.qr-card, .modal-link').forEach((node) => {
+  const dayPlanRegion = document.getElementById("day-plan-region");
+  const dayPlanSeason = document.getElementById("day-plan-season");
+  if (dayPlanRegion) {
+    dayPlanRegion.addEventListener("change", (event) => {
+      state.dayPlanFilters.region = event.currentTarget.value;
+      renderDayPlans();
+    });
+  }
+  if (dayPlanSeason) {
+    dayPlanSeason.addEventListener("change", (event) => {
+      state.dayPlanFilters.season = event.currentTarget.value;
+      renderDayPlans();
+    });
+  }
+
+  document.querySelectorAll(".qr-card, .modal-link").forEach((node) => {
     node.addEventListener("click", () => {
-      analytics.track("community_qr_source_open", { source: node.className });
+      analytics.track("click_open_qr", {
+        page_name: "community",
+        entry_location: node.className,
+      });
     });
   });
 
   document.querySelectorAll("[data-premium-feature]").forEach((node) => {
     node.addEventListener("click", () => {
-      analytics.track("premium_feature_click", {
-        feature: node.dataset.premiumFeature,
-        location: node.dataset.premiumLocation || state.activeView,
-        label: node.textContent.trim(),
+      analytics.track("click_unlock_pro", {
+        page_name:
+          {
+            home: "home",
+            labs: "lab_input",
+            plan: "diet_plan",
+            community: "community",
+          }[state.activeView] || state.activeView,
+        feature_name: node.dataset.premiumFeature,
+        entry_location: node.dataset.premiumLocation || state.activeView,
+        button_label: node.textContent.trim(),
       });
       showFeatureToast();
     });
@@ -684,6 +1162,7 @@ function seedDemo() {
   form.elements.potassium.value = 4.9;
   form.elements.phosphorus.value = 1.2;
   form.elements.albumin.value = 38;
+  form.elements.urineOutput.value = 1200;
 }
 
 async function initApp() {

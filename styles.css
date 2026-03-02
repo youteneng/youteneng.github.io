@@ -721,6 +721,109 @@ p {
   gap: 16px;
 }
 
+.day-plan-card {
+  padding: 18px 18px 16px;
+}
+
+.day-plan-head {
+  margin-bottom: 14px;
+}
+
+.day-plan-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.day-plan-summary {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.day-plan-results {
+  display: grid;
+  gap: 12px;
+}
+
+.day-plan-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfdfd;
+  padding: 15px;
+}
+
+.day-plan-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.day-plan-item-head strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.day-plan-item-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.day-plan-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.day-plan-meals {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.day-plan-meals div {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.day-plan-meals span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.day-plan-meals strong {
+  font-size: 0.93rem;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.day-plan-highlights,
+.day-plan-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.day-plan-totals span {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef5f4;
+  color: #31566a;
+  font-size: 0.85rem;
+}
+
 .plan-secondary {
   display: grid;
   gap: 14px;
@@ -830,7 +933,7 @@ p {
 
 .budget-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 10px;
 }
 
@@ -850,7 +953,9 @@ p {
 }
 
 .budget-item strong {
-  font-size: 1.05rem;
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.45;
 }
 
 .stage-copy {
@@ -951,6 +1056,13 @@ p {
   margin-top: 12px;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.meal-source-note {
+  margin-top: 10px;
+  color: #5e7188;
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
 
 .meal-actions {
@@ -1127,6 +1239,88 @@ p {
   border-top: 1px solid var(--border);
 }
 
+.database-knowledge-block {
+  padding-top: 18px;
+}
+
+.database-knowledge-block + .database-knowledge-block {
+  margin-top: 8px;
+}
+
+.mini-section-head {
+  margin-bottom: 12px;
+}
+
+.mini-section-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.mini-section-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.knowledge-grid,
+.exchange-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 16px;
+}
+
+.knowledge-card,
+.exchange-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfdfd;
+  padding: 14px 15px;
+}
+
+.knowledge-card-head,
+.exchange-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.knowledge-card-head strong,
+.exchange-card-head strong {
+  font-size: 0.96rem;
+}
+
+.knowledge-card-head span,
+.exchange-card-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.knowledge-list,
+.exchange-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.62;
+  font-size: 0.9rem;
+}
+
+.knowledge-list li + li,
+.exchange-list li + li {
+  margin-top: 6px;
+}
+
+.exchange-card p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.58;
+}
+
 .database-toolbar {
   margin-bottom: 14px;
 }
@@ -1160,6 +1354,94 @@ p {
 .food-results {
   display: grid;
   gap: 12px;
+}
+
+.database-result-block + .database-result-block {
+  margin-top: 18px;
+}
+
+.guide-results {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.guide-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfdfd;
+  padding: 14px 15px;
+}
+
+.guide-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.guide-card-head strong {
+  font-size: 0.96rem;
+}
+
+.guide-card-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.guide-card p,
+.guide-card small {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.guide-card p {
+  font-size: 0.9rem;
+}
+
+.guide-card small {
+  margin-top: 6px;
+  font-size: 0.84rem;
+}
+
+.guide-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.guide-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef5f4;
+  color: #31566a;
+  font-size: 0.82rem;
+}
+
+.guide-empty {
+  padding: 18px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fbfdfd 0%, #f4f8f8 100%);
+}
+
+.guide-empty strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.guide-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .empty-state {
@@ -1523,7 +1805,7 @@ p {
     transform: none;
     width: auto;
     margin: 0;
-    padding: 12px 12px 72px;
+    padding: 12px 12px calc(76px + env(safe-area-inset-bottom, 0px));
     border-radius: 0;
     align-items: flex-start;
     flex-direction: column;
@@ -1539,7 +1821,7 @@ p {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
-    padding: 8px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.96);
     border: 1px solid var(--border);
@@ -1549,7 +1831,7 @@ p {
   .main-shell {
     width: calc(100% - 24px);
     padding-top: 14px;
-    padding-bottom: 96px;
+    padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
   }
 
   .nav-tab {
@@ -1696,13 +1978,19 @@ p {
     margin-top: 10px;
     font-size: 0.9rem;
     line-height: 1.65;
+    max-width: 100%;
   }
 
   .notice-bar {
     margin-top: 22px;
-    padding: 11px 12px;
+    padding: 12px 12px 12px 40px;
     font-size: 0.88rem;
     line-height: 1.55;
+    text-align: left;
+  }
+
+  .notice-bar::before {
+    left: 12px;
   }
 
   .form-stack {
@@ -1738,6 +2026,7 @@ p {
   .field small {
     margin-top: 6px;
     font-size: 0.84rem;
+    line-height: 1.55;
   }
 
   .toggle-ui {
@@ -1752,6 +2041,15 @@ p {
 
   .toggle-field input:checked + .toggle-ui::after {
     transform: translateX(18px);
+  }
+
+  .toggle-field {
+    align-items: center;
+    gap: 12px;
+    min-height: 50px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    line-height: 1.45;
   }
 
   .button-wide {
@@ -1787,6 +2085,27 @@ p {
 
   .plan-secondary {
     margin-top: 18px;
+  }
+
+  .day-plan-card {
+    padding: 16px;
+  }
+
+  .day-plan-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .day-plan-item-head {
+    flex-direction: column;
+  }
+
+  .day-plan-badges {
+    justify-content: flex-start;
+  }
+
+  .day-plan-meals div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .tools-disclosure summary {
@@ -1845,8 +2164,23 @@ p {
   }
 
   .meal-copy p,
-  .ingredient-copy {
+  .ingredient-copy,
+  .meal-source-note {
     font-size: 0.88rem;
+  }
+
+  .knowledge-grid,
+  .exchange-grid,
+  .guide-results {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .knowledge-card-head,
+  .exchange-card-head,
+  .guide-card-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .nutrient-tags {
@@ -1873,6 +2207,8 @@ p {
   }
 
   .progress-label {
+    display: grid;
+    gap: 4px;
     font-size: 0.88rem;
   }
 
@@ -1955,7 +2291,7 @@ p {
   }
 
   .topbar {
-    padding: 10px 10px 72px;
+    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 0px));
   }
 
   .hero-card {
@@ -1975,8 +2311,41 @@ p {
     padding-right: 14px;
   }
 
+  .premium-card,
+  .community-card,
+  .tips-card {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
   .meal-card {
     padding: 14px 12px 12px;
+  }
+
+  .brand {
+    width: 100%;
+    line-height: 1.35;
+  }
+
+  .community-grid {
+    width: 100%;
+    gap: 16px;
+  }
+
+  .community-card p,
+  .tips-list {
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+
+  .qr-card {
+    width: 100%;
+    max-width: 260px;
+    padding: 14px;
+  }
+
+  .footer {
+    padding: 18px 14px calc(28px + env(safe-area-inset-bottom, 0px));
   }
 
   .tag {
