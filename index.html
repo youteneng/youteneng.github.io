@@ -1,688 +1,378 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>肾病营养师 · 优特能</title>
-    <style>
-        /* 全局样式，主色调 #4a90e2 */
-        * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        body { background:#eef3f8; min-height:100vh; display:flex; justify-content:center; padding:12px; }
-        #app { max-width:500px; width:100%; background:white; border-radius:32px; box-shadow:0 20px 40px rgba(0,20,40,0.15); padding:20px 16px 30px; position:relative; }
-        h1 { font-size:32px; color:#0b4b6b; margin-bottom:8px; display:flex; align-items:center; gap:6px; font-weight:700; }
-        .sub {
-            background: #4a90e2;
-            color: white;
-            font-size: 18px;
-            font-weight: 700;
-            padding: 14px 18px;
-            border-radius: 40px;
-            margin: 10px 0 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(74,144,226,0.3);
-            letter-spacing: 0.5px;
-        }
-        .disclaimer { background:#fef7e7; border-left:6px solid #e6a017; padding:12px 16px; border-radius:24px; font-size:13px; color:#8a6d2b; margin:15px 0; font-weight:500; }
-        .nav { display:flex; justify-content:space-around; background:#f0f7fc; border-radius:40px; padding:6px; margin:20px 0 16px; border:1px solid #cbddec; }
-        .nav-item { flex:1; text-align:center; padding:10px 0; border-radius:30px; font-weight:600; color:#2a5f82; cursor:pointer; transition:0.2s; }
-        .nav-item.active { background:#4a90e2; color:white; box-shadow:0 4px 8px rgba(74,144,226,0.3); }
-        .page { display:none; }
-        .page.active { display:block; }
-        .card { background:#f8fbfe; border-radius:28px; padding:20px 16px; border:1px solid #d2e3f0; margin:16px 0; }
-        .label { font-weight:700; color:#1a4b6d; font-size:18px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-        .input-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; }
-        .input-group { flex:1 1 130px; }
-        .input-group label { font-size:14px; color:#3a627d; display:block; margin-bottom:4px; }
-        input, select { width:100%; padding:14px 16px; border:1px solid #c2d6e6; border-radius:30px; font-size:16px; background:white; }
-        .radio-group { display:flex; gap:20px; background:white; padding:10px 16px; border-radius:30px; border:1px solid #c2d6e6; }
-        .btn { width:100%; background:#4a90e2; color:white; font-size:18px; font-weight:700; padding:16px; border:none; border-radius:50px; margin:12px 0; cursor:pointer; box-shadow:0 8px 16px rgba(74,144,226,0.3); }
-        .btn:active { background:#3a78c2; }
-        .btn-small { background:#e1eefb; color:#4a90e2; font-size:16px; padding:10px; border-radius:30px; border:none; cursor:pointer; }
-        .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:15px 0; }
-        .nutri-card { background:white; border-radius:18px; padding:12px 4px; text-align:center; border:1px solid #d4e2ee; }
-        .nutri-card .value { font-size:24px; font-weight:700; color:#0b4b6b; }
-        .food-table { background:white; border-radius:24px; border:1px solid #d0e2f0; margin:16px 0; }
-        .food-row { display:flex; justify-content:space-between; padding:14px 18px; border-bottom:1px dashed #c7ddec; }
-        .food-row:last-child { border-bottom:none; }
-        .food-row span:first-child { white-space: nowrap; margin-right: 8px; flex-shrink: 0; }
-        .food-row span:last-child { text-align: right; word-break: break-word; font-size: 0.92em; color: #1a4b6d; }
-        .warning { background:#ffefed; border-left:6px solid #c0392b; padding:16px; border-radius:24px; color:#a13024; font-weight:500; margin:20px 0; }
-        .progress-bar { background:#e0eefb; height:24px; border-radius:30px; margin:8px 0; overflow:hidden; }
-        .progress-fill { height:100%; background:#4a90e2; color:white; font-size:13px; line-height:24px; padding-left:10px; white-space:nowrap; }
-        .history-item { background:white; border-radius:20px; padding:16px; margin-bottom:10px; border:1px solid #d0e2f0; }
-        .slider-panel { background:#e9f2fa; border-radius:28px; padding:18px; margin:16px 0; border:1px solid #bdd6e8; }
-        .slider-item { margin-bottom:16px; }
-        .slider-item label { display:flex; justify-content:space-between; font-weight:600; color:#1a4b6d; }
-        .slider-item input[type=range] { width:100%; margin:8px 0; -webkit-appearance:none; height:8px; background:#d0e0f0; border-radius:10px; outline:none; }
-        .slider-item input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:24px; height:24px; background:#4a90e2; border-radius:50%; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
-        .slider-value { font-weight:700; color:#0b4b6d; }
-        .slider-actions { display:flex; gap:10px; margin-top:16px; }
-        .slider-actions button { flex:1; }
-        .footnote { text-align:center; font-size:12px; color:#7b93aa; margin-top:20px; }
-        .qr-area { text-align:center; margin-top:20px; padding:12px 0; border-top:1px dashed #c7ddec; }
-        .qr-img { width:100px; height:100px; border-radius:16px; border:2px solid #4a90e2; object-fit: cover; }
-        .qr-text { font-size:12px; color:#4a90e2; font-weight:500; margin-top:6px; }
-        .qr-sub { font-size:10px; color:#999; margin-top:2px; }
-    </style>
-    <!-- 百度统计代码 - 初始化数组（必须保留，供事件埋点使用） -->
-    <script>
-    var _hmt = _hmt || [];
-    // 页面加载完成后发送一个自定义事件，用于验证统计是否工作（可选）
-    window.addEventListener('load', function() {
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '系统', '页面加载', '完成']);
-        }
-    });
-    </script>
-</head>
-<body>
-<div id="app">
-    <h1>🧪 肾病营养师</h1>
-    <div class="sub">优特能·您的肾病饮食助手</div>
-    <div class="disclaimer">
-        ⚠️ 本工具仅供辅助参考，所有计算结果均基于通用医学指南，不能替代执业医师的个性化诊断与治疗建议。请务必遵医嘱，并结合自身情况调整饮食。
-    </div>
-    <div class="nav">
-        <div class="nav-item active" data-page="profile">档案</div>
-        <div class="nav-item" data-page="target">目标</div>
-        <div class="nav-item" data-page="recipe">食谱</div>
-        <div class="nav-item" data-page="record">记录</div>
-    </div>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,noarchive,nosnippet,noimageindex" />
+    <link rel="canonical" href="https://youteneng.github.io/" />
+    <title>肾友营养助手</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" data-nav="home">
+          <span class="brand-icon" aria-hidden="true"></span>
+          <span>CKD 肾友智能营养助手</span>
+        </div>
+        <nav class="nav-tabs" aria-label="主导航">
+          <button class="nav-tab is-active" type="button" data-nav="home"><span>首页</span></button>
+          <button class="nav-tab" type="button" data-nav="labs"><span>化验录入</span></button>
+          <button class="nav-tab" type="button" data-nav="plan"><span>饮食方案</span></button>
+          <button class="nav-tab" type="button" data-nav="community"><span>肾友社区</span></button>
+        </nav>
+      </header>
 
-    <!-- 档案页 -->
-    <div id="profile-page" class="page active">
-        <div class="card">
-            <div class="label">🧑‍⚕️ 我的档案</div>
-            <div class="radio-group" style="margin-bottom: 16px;">
-                <label><input type="radio" name="gender" value="male" checked> 男</label>
-                <label><input type="radio" name="gender" value="female"> 女</label>
+      <main class="main-shell">
+        <section id="view-home" class="view is-active" data-view="home">
+          <div class="hero-card">
+            <div class="hero-mark" aria-hidden="true"></div>
+            <h1>慢性肾脏病 CKD 肾友智能营养助手</h1>
+            <p class="hero-subtitle">基于 CKD 营养治疗原则，AI赋能帮助您更稳妥地规划每日饮食</p>
+            <div class="hero-actions">
+              <button id="start-use-btn" class="button button-dark button-start" type="button">开始使用</button>
+              <button
+                id="join-community-btn"
+                class="button button-light button-community"
+                type="button"
+                data-open-community
+              >
+                加入社区
+              </button>
             </div>
-            <div class="input-row">
-                <div class="input-group"><label>身高 (cm)</label><input type="number" id="height" value="170" step="1"></div>
-                <div class="input-group"><label>体重 (kg)</label><input type="number" id="weight" value="70" step="0.1"></div>
-            </div>
-            <div class="input-group" style="margin-bottom: 16px;">
-                <label>CKD分期</label>
-                <select id="ckdStage">
-                    <option value="3">CKD 3期 (GFR 30-59)</option>
-                    <option value="4">CKD 4期 (GFR 15-29)</option>
-                    <option value="5" selected>CKD 5期 (GFR <15, 未透析)</option>
-                </select>
-            </div>
-            <div class="input-row">
-                <div class="input-group"><label>血钾 (mmol/L)</label><input type="number" id="bloodK" value="4.5" step="0.1"></div>
-                <div class="input-group"><label>血磷 (mmol/L)</label><input type="number" id="bloodP" value="1.3" step="0.1"></div>
-            </div>
-            <div class="input-row" style="align-items: center;">
-                <label style="display: flex; align-items: center; gap: 8px; width: 100%;">
-                    <input type="checkbox" id="edema" style="width: auto; margin: 0;">
-                    <span>有浮肿/高血压</span>
+          </div>
+
+          <div class="section-divider">
+            <span>核心功能</span>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon blue" aria-hidden="true"></div>
+              <h2>智能化验分析</h2>
+              <p>录入关键化验指标与基础情况，生成更贴近个体状态的营养预算</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon green" aria-hidden="true"></div>
+              <h2>精准饮食推荐</h2>
+              <p>结合 CKD 分期与交换份思路，为三餐和加餐提供更稳妥的组合建议</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon amber" aria-hidden="true"></div>
+              <h2>肾友互助社区</h2>
+              <p>获取病友交流、饮食管理提醒与社群支持，提升长期执行性</p>
+            </article>
+          </div>
+
+          <div class="notice-bar">
+            当前版本适用对象：未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
+          </div>
+        </section>
+
+        <section id="view-labs" class="view" data-view="labs">
+          <div class="view-head">
+            <span class="view-eyebrow">Step 1</span>
+            <h1>化验录入</h1>
+            <p>根据基础信息、eGFR 与关键化验结果，生成更贴近当前状态的营养目标。当前版本适用对象为未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。</p>
+          </div>
+          <form id="lab-form" class="form-stack">
+            <article class="card form-card">
+              <h2>基本信息</h2>
+              <div class="form-grid">
+                <label class="field">
+                  <span>性别</span>
+                  <select name="sex" required>
+                    <option value="">选择性别</option>
+                    <option value="male">男</option>
+                    <option value="female">女</option>
+                  </select>
                 </label>
+                <label class="field">
+                  <span>身高 (cm)</span>
+                  <input name="height" type="number" min="120" max="220" placeholder="例如 170" required />
+                </label>
+                <label class="toggle-field">
+                  <span>是否有浮肿</span>
+                  <input name="edema" type="checkbox" />
+                  <span class="toggle-ui" aria-hidden="true"></span>
+                </label>
+                <label class="toggle-field">
+                  <span>是否有高血压</span>
+                  <input name="hypertension" type="checkbox" />
+                  <span class="toggle-ui" aria-hidden="true"></span>
+                </label>
+              </div>
+            </article>
+
+            <article class="card form-card">
+              <h2>化验数值</h2>
+              <div class="form-grid labs-grid">
+                <label class="field">
+                  <span>肌酐 (μmol/L)</span>
+                  <input name="creatinine" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：44-133</small>
+                </label>
+                <label class="field">
+                  <span>尿素氮 (mmol/L)</span>
+                  <input name="bun" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：2.9-8.2</small>
+                </label>
+                <label class="field">
+                  <span>eGFR (mL/min)</span>
+                  <input name="egfr" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：&gt;90</small>
+                </label>
+                <label class="field">
+                  <span>白蛋白 (g/L)</span>
+                  <input name="albumin" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：35-55</small>
+                </label>
+                <label class="field">
+                  <span>血钾 (mmol/L)</span>
+                  <input name="potassium" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：3.5-5.5</small>
+                </label>
+                <label class="field">
+                  <span>血磷 (mmol/L)</span>
+                  <input name="phosphorus" type="number" step="0.01" placeholder="请输入数值" />
+                  <small>正常参考：0.81-1.45</small>
+                </label>
+                <label class="field">
+                  <span>血钠 (mmol/L)</span>
+                  <input name="sodium" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：135-145</small>
+                </label>
+                <label class="field">
+                  <span>血红蛋白 (g/L)</span>
+                  <input name="hemoglobin" type="number" step="0.1" placeholder="请输入数值" />
+                  <small>正常参考：110-160</small>
+                </label>
+              </div>
+            </article>
+
+            <button class="button button-dark button-wide" type="submit">生成饮食方案</button>
+          </form>
+
+          <section class="premium-preview">
+            <div class="section-title section-title-secondary">
+              <span class="section-icon section-icon-premium" aria-hidden="true"></span>
+              <div>
+                <h2>高阶功能</h2>
+                <p class="section-copy">为更高效的使用体验提供进阶能力。</p>
+              </div>
             </div>
-            <button class="btn" id="saveProfile">保存档案并生成目标</button>
-        </div>
-        <div class="disclaimer" style="margin-top:0;">👉 请确保化验数据准确，并定期咨询医生调整方案。</div>
-    </div>
+            <article class="card premium-card">
+              <div class="premium-copy">
+                <h3>化验单智能识别录入</h3>
+                <p>拍照上传化验单后，自动提取血肌酐、血钾、血磷、白蛋白等关键指标，减少手动录入负担。</p>
+              </div>
+              <button
+                class="button button-light button-premium premium-button"
+                type="button"
+                data-premium-feature="smart_lab_ocr"
+                data-premium-location="labs"
+              >
+                体验智能识别
+              </button>
+            </article>
+          </section>
+        </section>
 
-    <!-- 目标页 -->
-    <div id="target-page" class="page">
-        <div class="card">
-            <div class="label">📊 今日营养目标</div>
-            <div id="targetIdealWeight" style="font-size:16px; color:#2f607c; margin-bottom:10px;"></div>
-            <div class="grid-3" id="targetGrid"></div>
-            <button class="btn" id="gotoRecipeFromTarget">生成食谱 →</button>
-        </div>
-    </div>
+        <section id="view-plan" class="view" data-view="plan">
+          <div class="view-head view-head-tight">
+            <span class="view-eyebrow">Step 2</span>
+            <h1>饮食方案</h1>
+            <p>基于 CKD 分期、化验风险与交换份逻辑，给出当日饮食预算和可替换方案。当前版本适用对象为未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。</p>
+          </div>
+          <div class="plan-primary">
+            <article class="card budget-card">
+              <div class="section-title">
+                <span class="section-icon section-icon-budget" aria-hidden="true"></span>
+                <div>
+                  <h2>每日营养预算</h2>
+                  <p class="section-copy">先看目标，再按餐次执行，避免主观估算导致偏差。</p>
+                </div>
+              </div>
+              <div id="budget-grid" class="budget-grid"></div>
+              <p id="stage-copy" class="stage-copy"></p>
+            </article>
 
-    <!-- 食谱页 -->
-    <div id="recipe-page" class="page">
-        <div class="card">
-            <div class="label">🥗 每日食物交换份</div>
-            <div id="sharesTable" class="food-table"></div>
-            <div class="label" style="margin-top:20px;">🍽️ 推荐食谱示例</div>
-            <div id="recipeExample" class="food-table"></div>
-            <div style="display: flex; gap: 8px; margin: 16px 0;">
-                <button class="btn" id="useRecipeForToday" style="flex:1;">使用此食谱记录今日</button>
-                <button class="btn" id="gotoRecord" style="flex:1;">去记录页</button>
+            <section class="plan-main-block">
+              <div class="section-title section-title-main">
+                <span class="section-icon section-icon-plan" aria-hidden="true"></span>
+                <div>
+                  <h2>今日推荐食谱</h2>
+                  <p class="section-copy">优先显示适合今日风险条件的主方案，可按餐次进行替换和记录。</p>
+                </div>
+              </div>
+              <div id="meal-sections" class="meal-sections"></div>
+            </section>
+
+            <article class="card intake-card">
+              <div class="section-title">
+                <span class="section-icon section-icon-track" aria-hidden="true"></span>
+                <div>
+                  <h2>今日摄入记录</h2>
+                  <p class="section-copy">记录已吃食物后，系统会自动提示是否接近或超过营养上限。</p>
+                </div>
+              </div>
+              <div id="intake-stats" class="intake-stats"></div>
+              <div id="intake-warning" class="intake-warning" hidden></div>
+            </article>
+          </div>
+
+          <section class="plan-secondary">
+            <div class="section-title section-title-secondary">
+              <span class="section-icon section-icon-library" aria-hidden="true"></span>
+              <div>
+                <h2>辅助工具</h2>
+                <p class="section-copy">食材数据库用于查找替换项和复核交换份，默认折叠以保持主流程专注。</p>
+              </div>
             </div>
-        </div>
-    </div>
+            <details class="card tools-disclosure">
+              <summary>展开交换食材数据库</summary>
+              <div class="database-card-inner">
+                <div class="database-toolbar">
+                  <label class="field search-field">
+                    <span>搜索食材</span>
+                    <input id="food-search" type="search" placeholder="输入 苹果、鸡蛋清、挂面、冬瓜 等" />
+                  </label>
+                </div>
+                <div id="food-summary" class="food-summary"></div>
+                <div id="food-results" class="food-results"></div>
+              </div>
+            </details>
 
-    <!-- 记录页 -->
-    <div id="record-page" class="page">
-        <div class="card">
-            <div class="label">📅 今日饮食记录</div>
-            <div id="dateDisplay" style="text-align:right; color:#2f607c;"></div>
-            <div id="recordTargetSummary" style="font-size:14px; margin:10px 0;"></div>
-            <div id="recordProgress"></div>
-            <div id="recordWarning" class="warning" style="display:none;"></div>
-
-            <div id="sliderPanel" class="slider-panel" style="display:none;">
-                <div style="font-weight:700; margin-bottom:12px;">调整各类食物份数</div>
-                <div class="slider-item"><label>🥛 乳制品 <span id="dairyVal" class="slider-value">1.0</span></label><input type="range" id="dairySlider" min="0" max="3" step="0.5" value="1"></div>
-                <div class="slider-item"><label>🍗 肉鱼禽蛋 <span id="meatVal" class="slider-value">1.0</span></label><input type="range" id="meatSlider" min="0" max="5" step="0.5" value="1"></div>
-                <div class="slider-item"><label>🥬 蔬菜 <span id="vegVal" class="slider-value">4.0</span></label><input type="range" id="vegSlider" min="0" max="8" step="0.5" value="4"></div>
-                <div class="slider-item"><label>🍎 水果 <span id="fruitVal" class="slider-value">2.0</span></label><input type="range" id="fruitSlider" min="0" max="5" step="0.5" value="2"></div>
-                <div class="slider-item"><label>🍚 谷类主食 <span id="grainVal" class="slider-value">2.0</span></label><input type="range" id="grainSlider" min="0" max="8" step="0.5" value="2"></div>
-                <div class="slider-item"><label>🧈 油脂类 <span id="oilVal" class="slider-value">5.0</span></label><input type="range" id="oilSlider" min="0" max="10" step="0.5" value="5"></div>
-                <div class="slider-item"><label>🍠 低蛋白淀粉 <span id="starchVal" class="slider-value">2.0</span></label><input type="range" id="starchSlider" min="0" max="10" step="0.5" value="2"></div>
-                <div class="slider-actions"><button class="btn-small" id="saveSlider">保存调整</button><button class="btn-small" id="cancelSlider">取消</button></div>
+            <div class="section-title section-title-secondary premium-section-head">
+              <span class="section-icon section-icon-premium" aria-hidden="true"></span>
+              <div>
+                <h2>高阶增值服务</h2>
+                <p class="section-copy">面向更长期、更精细的营养管理体验。</p>
+              </div>
             </div>
+            <div class="premium-grid">
+              <article class="card premium-card">
+                <div class="premium-copy">
+                  <h3>专属个性化营养方案</h3>
+                  <p>结合长期指标变化、饮食习惯与个体目标，提供更有针对性的营养管理建议。</p>
+                </div>
+                <button
+                  class="button button-light button-premium premium-button"
+                  type="button"
+                  data-premium-feature="personalized_nutrition_plan"
+                  data-premium-location="plan"
+                >
+                  解锁专属方案
+                </button>
+              </article>
+              <article class="card premium-card">
+                <div class="premium-copy">
+                  <h3>营养趋势图表与 AI 营养报告</h3>
+                  <p>按时间维度查看营养摄入变化，结合 AI 解读输出更清晰的阶段性饮食反馈。</p>
+                </div>
+                <button
+                  class="button button-light button-premium premium-button"
+                  type="button"
+                  data-premium-feature="nutrition_trend_ai_report"
+                  data-premium-location="plan"
+                >
+                  查看升级内容
+                </button>
+              </article>
+            </div>
+          </section>
+        </section>
 
-            <div style="margin: 16px 0;"><button class="btn" id="showSliderBtn">📊 调整摄入</button></div>
-            <div class="label" style="margin-top:20px;">📚 历史记录</div>
-            <div id="historyList"></div>
+        <section id="view-community" class="view" data-view="community">
+          <div class="view-head view-head-tight">
+            <span class="view-eyebrow">Support</span>
+            <h1>肾友社区</h1>
+            <p>除了个体化饮食建议，也为长期管理提供更轻量的交流与支持入口。</p>
+          </div>
+          <div class="notice-bar">
+            当前版本适用对象：未接受透析治疗的慢性肾脏病患者（CKD 1-5期）。针对血液透析、腹膜透析及其他需特殊肾脏替代治疗人群的营养管理方案，敬请期待专属版本。本工具内容仅供饮食营养管理参考，不能替代医师诊疗意见和个体化营养处方。
+          </div>
+
+          <div class="community-grid">
+            <article class="card community-card">
+              <h2>扫码加入肾友群</h2>
+              <p>获取 CKD 饮食管理资讯、交流经验与日常提醒，让饮食执行更容易长期坚持。</p>
+              <button
+                id="community-cta"
+                class="button button-light button-premium community-link"
+                type="button"
+                data-premium-feature="community_premium_service"
+                data-premium-location="community"
+              >
+                解锁高阶陪伴服务
+              </button>
+              <a
+                class="qr-card"
+                href="https://i.ibb.co/60zLWcbY/qrcode-for-gh-cf3480e4ed67-258.jpg"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="打开微信二维码原图"
+              >
+                <img
+                  src="https://i.ibb.co/60zLWcbY/qrcode-for-gh-cf3480e4ed67-258.jpg"
+                  alt="肾友社区微信二维码"
+                />
+                <span>微信扫码加入肾友群</span>
+              </a>
+            </article>
+
+            <article class="card tips-card">
+              <h2>CKD 饮食小贴士</h2>
+              <ul class="tips-list">
+                <li>蔬菜先焯水可减少 30-50% 的钾含量</li>
+                <li>选择白米饭代替糙米饭以降低磷摄入</li>
+                <li>优质蛋白（鸡蛋、鱼、瘦肉）优于植物蛋白</li>
+                <li>减少加工食品以控制钠摄入</li>
+                <li>少量多餐有助于减轻肾脏负担</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        © 2026 优特能 版权所有。本平台提供的信息仅供参考，不作为医疗诊断依据。具体诊疗请遵医嘱。
+      </footer>
+    </div>
+
+    <div id="community-modal" class="modal" hidden>
+      <div class="modal-backdrop" data-close-community></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="community-modal-title">
+        <button class="modal-close" type="button" aria-label="关闭二维码弹层" data-close-community>×</button>
+        <div class="modal-head">
+          <div class="modal-badge" aria-hidden="true"></div>
+          <h2 id="community-modal-title">扫码加入肾友社区</h2>
+          <p>可直接扫码加入；如使用手机浏览器，也可以截图后在微信中识别二维码。</p>
         </div>
+        <div class="modal-qr-wrap">
+          <img
+            src="https://i.ibb.co/60zLWcbY/qrcode-for-gh-cf3480e4ed67-258.jpg"
+            alt="肾友社区微信二维码"
+          />
+        </div>
+        <a
+          class="button button-dark button-open modal-link"
+          href="https://i.ibb.co/60zLWcbY/qrcode-for-gh-cf3480e4ed67-258.jpg"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          打开二维码原图
+        </a>
+      </div>
     </div>
 
-    <div class="footnote">⚠️ 本工具为辅助参考，不替代医嘱。</div>
-    <div class="qr-area">
-        <img class="qr-img" src="https://i.ibb.co/60zLWcbY/qrcode-for-gh-cf3480e4ed67-258.jpg" alt="优特能公众号二维码">
-        <div class="qr-text">扫码关注优特能</div>
-        <div class="qr-sub">获取更多肾病饮食知识</div>
-    </div>
-</div>
+    <div id="feature-toast" class="feature-toast" hidden role="status" aria-live="polite">敬请期待高阶版本</div>
 
-<!-- 百度统计脚本 - 放在body结束前（符合百度检查要求） -->
-<script>
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?518c1a8f2fbf8068280278370c342fce";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-<script>
-// 以下为完整的核心逻辑（包含所有防御性更新和百度统计事件埋点）
-const FOOD_DB = {
-    dairy: [
-        { name: "全脂奶", weight: 130, protein: 4, energy: 80, sodium: 70, potassium: 135, phosphorus: 110 },
-        { name: "脱脂酸奶", weight: 120, protein: 4, energy: 68, sodium: 70, potassium: 187, phosphorus: 109 }
-    ],
-    meat: [
-        { name: "鸡蛋", weight: 55, protein: 7, energy: 85, sodium: 69, potassium: 146, phosphorus: 100 },
-        { name: "瘦猪肉", weight: 35, protein: 7, energy: 65, sodium: 50, potassium: 100, phosphorus: 65 },
-        { name: "清蒸鲈鱼", weight: 55, protein: 7, energy: 73, sodium: 50, potassium: 100, phosphorus: 65 }
-    ],
-    grain: [
-        { name: "米饭", weight: 60, protein: 2, energy: 80, sodium: 20, potassium: 35, phosphorus: 35 },
-        { name: "馒头", weight: 30, protein: 2, energy: 80, sodium: 20, potassium: 35, phosphorus: 35 }
-    ],
-    veg: {
-        low: [
-            { name: "冬瓜", weight: 200, protein: 1, energy: 15, sodium: 20, potassium: 78, phosphorus: 25 },
-            { name: "黄瓜", weight: 150, protein: 1, energy: 15, sodium: 20, potassium: 89, phosphorus: 25 }
-        ],
-        medium: [
-            { name: "茄子", weight: 100, protein: 1, energy: 15, sodium: 20, potassium: 136, phosphorus: 25 },
-            { name: "番茄", weight: 100, protein: 1, energy: 15, sodium: 20, potassium: 163, phosphorus: 25 }
-        ],
-        high: [
-            { name: "菠菜", weight: 100, protein: 1, energy: 15, sodium: 20, potassium: 248, phosphorus: 25 },
-            { name: "土豆", weight: 50, protein: 1, energy: 15, sodium: 20, potassium: 224, phosphorus: 25 }
-        ]
-    },
-    fruit: {
-        low: [
-            { name: "苹果", weight: 110, protein: 1, energy: 65, sodium: 0, potassium: 115, phosphorus: 20 },
-            { name: "梨", weight: 150, protein: 1, energy: 65, sodium: 0, potassium: 116, phosphorus: 20 }
-        ],
-        medium: [
-            { name: "橘子", weight: 120, protein: 1, energy: 65, sodium: 0, potassium: 157, phosphorus: 20 },
-            { name: "猕猴桃", weight: 120, protein: 1, energy: 65, sodium: 0, potassium: 217, phosphorus: 20 }
-        ],
-        high: [
-            { name: "香蕉", weight: 70, protein: 1, energy: 65, sodium: 0, potassium: 256, phosphorus: 20 }
-        ]
-    },
-    oil: [
-        { name: "花生油", weight: 5, protein: 0, energy: 45, sodium: 10, potassium: 10, phosphorus: 5 }
-    ],
-    starch: [
-        { name: "藕粉", weight: 15, protein: 0.2, energy: 60, sodium: 0, potassium: 20, phosphorus: 5 }
-    ]
-};
-
-const AVG_NUTRI = {
-    dairy: { protein:4, energy:80, sodium:70, potassium:135, phosphorus:110 },
-    meat:  { protein:7, energy:65, sodium:50, potassium:100, phosphorus:65 },
-    grain: { protein:2, energy:80, sodium:20, potassium:35, phosphorus:35 },
-    veg:   { protein:1, energy:15, sodium:20, potassium:150, phosphorus:25 },
-    fruit: { protein:1, energy:65, sodium:0,  potassium:200, phosphorus:20 },
-    oil:   { protein:0, energy:45, sodium:10, potassium:10, phosphorus:5 },
-    starch:{ protein:0.2, energy:60, sodium:0, potassium:20, phosphorus:5 }
-};
-
-let currentProfile = null;
-let currentTarget = null;
-let currentShares = null;
-let todayRecord = null;
-let historyRecords = [];
-
-const STORAGE_KEYS = {
-    PROFILE: 'nephro_profile',
-    TARGET: 'nephro_target',
-    SHARES: 'nephro_shares',
-    TODAY: 'nephro_today',
-    HISTORY: 'nephro_history'
-};
-
-function loadFromStorage() {
-    try {
-        let p = localStorage.getItem(STORAGE_KEYS.PROFILE);
-        if (p) currentProfile = JSON.parse(p);
-        let t = localStorage.getItem(STORAGE_KEYS.TARGET);
-        if (t) currentTarget = JSON.parse(t);
-        let s = localStorage.getItem(STORAGE_KEYS.SHARES);
-        if (s) currentShares = JSON.parse(s);
-        let td = localStorage.getItem(STORAGE_KEYS.TODAY);
-        if (td) todayRecord = JSON.parse(td);
-        let hist = localStorage.getItem(STORAGE_KEYS.HISTORY);
-        if (hist) historyRecords = JSON.parse(hist); else historyRecords = [];
-        let todayStr = new Date().toLocaleDateString('zh-CN');
-        if (todayRecord && todayRecord.date !== todayStr) {
-            if (todayRecord) historyRecords.unshift(todayRecord);
-            todayRecord = null;
-            localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(historyRecords));
-            localStorage.removeItem(STORAGE_KEYS.TODAY);
-        }
-    } catch (e) { console.warn('读取存储失败', e); }
-}
-function saveProfile() { try { localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(currentProfile)); } catch(e) {} }
-function saveTarget() { try { localStorage.setItem(STORAGE_KEYS.TARGET, JSON.stringify(currentTarget)); } catch(e) {} }
-function saveShares() { try { localStorage.setItem(STORAGE_KEYS.SHARES, JSON.stringify(currentShares)); } catch(e) {} }
-function saveToday() { try { if (todayRecord) localStorage.setItem(STORAGE_KEYS.TODAY, JSON.stringify(todayRecord)); else localStorage.removeItem(STORAGE_KEYS.TODAY); } catch(e) {} }
-function saveHistory() { try { localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(historyRecords)); } catch(e) {} }
-
-function computeTargetAndShares(profile) {
-    let idealWeight = profile.gender === 'male' ? profile.height - 105 : profile.height - 107;
-    idealWeight = Math.round(idealWeight * 10) / 10;
-    let proteinFactor = profile.ckdStage == 5 ? 0.4 : 0.6;
-    let proteinTotal = Math.round(idealWeight * proteinFactor * 10) / 10;
-    let proteinHQ = Math.round(proteinTotal * 0.6 * 10) / 10;
-    let energy = Math.round(idealWeight * 35);
-    let sodium = profile.edema ? 1500 : 2000;
-    let potassium = Math.round(idealWeight * 40);
-    let phosphorus = Math.round(idealWeight * 10);
-    const target = { idealWeight, proteinTotal, proteinHQ, energy, sodium, potassium, phosphorus };
-
-    let milkShares = 1;
-    let remainHQ = proteinHQ - milkShares * AVG_NUTRI.dairy.protein;
-    let meatShares = Math.max(0, remainHQ / AVG_NUTRI.meat.protein);
-    meatShares = Math.round(meatShares * 2) / 2;
-    let vegShares = 4;
-    let fruitShares = 2;
-    let nonHQFromVegFruit = vegShares * AVG_NUTRI.veg.protein + fruitShares * AVG_NUTRI.fruit.protein;
-    let nonHQTarget = proteinTotal - proteinHQ;
-    let grainShares = Math.max(0, (nonHQTarget - nonHQFromVegFruit) / AVG_NUTRI.grain.protein);
-    grainShares = Math.round(grainShares * 2) / 2;
-    let energySoFar = milkShares * AVG_NUTRI.dairy.energy + meatShares * AVG_NUTRI.meat.energy +
-                      vegShares * AVG_NUTRI.veg.energy + fruitShares * AVG_NUTRI.fruit.energy +
-                      grainShares * AVG_NUTRI.grain.energy;
-    let oilShares = 5;
-    let energyWithOil = energySoFar + oilShares * AVG_NUTRI.oil.energy;
-    let energyRemain = energy - energyWithOil;
-    let starchShares = 0;
-    if (energyRemain > 0) {
-        starchShares = energyRemain / AVG_NUTRI.starch.energy;
-        starchShares = Math.round(starchShares * 2) / 2;
-    } else {
-        oilShares = Math.max(0, oilShares + Math.floor(energyRemain / AVG_NUTRI.oil.energy));
-        energyRemain = energy - (energySoFar + oilShares * AVG_NUTRI.oil.energy);
-        if (energyRemain > 0) starchShares = Math.round(energyRemain / AVG_NUTRI.starch.energy * 2) / 2;
-    }
-    const shares = { milk: milkShares, meat: meatShares, veg: vegShares, fruit: fruitShares, grain: grainShares, oil: oilShares, starch: starchShares };
-    return { target, shares };
-}
-
-function showPage(pageId) {
-    try {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        const targetPage = document.getElementById(pageId + '-page');
-        if (!targetPage) { console.error('页面不存在:', pageId + '-page'); return; }
-        targetPage.classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(item => {
-            if (item.dataset.page === pageId) item.classList.add('active');
-            else item.classList.remove('active');
-        });
-        if (pageId === 'target') renderTargetPage();
-        if (pageId === 'recipe') renderRecipePage();
-        if (pageId === 'record') renderRecordPage();
-
-        // 百度统计：记录页面切换事件（SPA 场景）
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '导航', '切换页面', pageId]);
-        }
-    } catch (e) {
-        console.error('页面切换错误', e);
-        alert('页面切换时出现错误，请刷新重试。如果问题持续，请联系技术支持。');
-    }
-}
-
-function renderTargetPage() {
-    const grid = document.getElementById('targetGrid');
-    const idealSpan = document.getElementById('targetIdealWeight');
-    if (!grid || !idealSpan) return;
-    if (!currentTarget) {
-        grid.innerHTML = '<div style="grid-column:span 3; text-align:center; padding:20px;">请先在档案页保存档案</div>';
-        idealSpan.innerText = '';
-        return;
-    }
-    idealSpan.innerText = `理想体重 ${currentTarget.idealWeight} kg`;
-    let html = `
-        <div class="nutri-card"><span class="value">${currentTarget.proteinTotal}</span><span class="unit">g</span><div>蛋白质</div></div>
-        <div class="nutri-card"><span class="value">${currentTarget.proteinHQ}</span><span class="unit">g</span><div>优质蛋白</div></div>
-        <div class="nutri-card"><span class="value">${currentTarget.energy}</span><span class="unit">kcal</span><div>能量</div></div>
-        <div class="nutri-card"><span class="value">${currentTarget.sodium}</span><span class="unit">mg</span><div>钠</div></div>
-        <div class="nutri-card"><span class="value">${currentTarget.potassium}</span><span class="unit">mg</span><div>钾</div></div>
-        <div class="nutri-card"><span class="value">${currentTarget.phosphorus}</span><span class="unit">mg</span><div>磷</div></div>
-    `;
-    grid.innerHTML = html;
-}
-
-function renderRecipePage() {
-    const sharesDiv = document.getElementById('sharesTable');
-    const recipeDiv = document.getElementById('recipeExample');
-    if (!sharesDiv || !recipeDiv) return;
-    if (!currentShares || !currentTarget || !currentProfile) {
-        sharesDiv.innerHTML = '<div class="food-row">请先保存档案</div>';
-        recipeDiv.innerHTML = '';
-        return;
-    }
-    let s = currentShares;
-    let sharesHtml = `
-        <div class="food-row"><span>🥛 乳制品</span><span>${s.milk.toFixed(1)} 份</span></div>
-        <div class="food-row"><span>🍗 肉鱼禽蛋</span><span>${s.meat.toFixed(1)} 份</span></div>
-        <div class="food-row"><span>🥬 蔬菜</span><span>${s.veg} 份</span></div>
-        <div class="food-row"><span>🍎 水果</span><span>${s.fruit} 份</span></div>
-        <div class="food-row"><span>🍚 谷类主食</span><span>${s.grain.toFixed(1)} 份</span></div>
-        <div class="food-row"><span>🧈 油脂类</span><span>${s.oil} 份</span></div>
-        <div class="food-row"><span>🍠 低蛋白淀粉</span><span>${s.starch.toFixed(1)} 份</span></div>
-    `;
-    sharesDiv.innerHTML = sharesHtml;
-
-    let bloodK = currentProfile.bloodK || 4.5;
-    let vegGroup = bloodK > 5.0 ? 'low' : (bloodK < 3.5 ? 'high' : 'medium');
-    let fruitGroup = bloodK > 5.0 ? 'low' : (bloodK < 3.5 ? 'high' : 'medium');
-    let dairyItem = FOOD_DB.dairy[0];
-    let meatItem = FOOD_DB.meat[0];
-    let grainItem = FOOD_DB.grain[0];
-    let vegItem = FOOD_DB.veg[vegGroup][0];
-    let fruitItem = FOOD_DB.fruit[fruitGroup][0];
-    let starchItem = FOOD_DB.starch[0];
-
-    let recipeHtml = `
-        <div class="food-row"><span>🌅 早餐</span><span>${dairyItem.name} ${s.milk}份 (${dairyItem.weight*s.milk}g) · ${grainItem.name} 1份 (${grainItem.weight}g) · 水果: ${fruitItem.name} 1份</span></div>
-        <div class="food-row"><span>☀️ 午餐</span><span>${meatItem.name} ${s.meat}份 (${Math.round(meatItem.weight*s.meat)}g) · 蔬菜: ${vegItem.name} 2份</span></div>
-        <div class="food-row"><span>🌙 晚餐</span><span>${meatItem.name} 剩余 · 蔬菜: ${vegItem.name} 2份 · 主食: ${grainItem.name} ${Math.max(0, s.grain-1).toFixed(1)}份</span></div>
-        <div class="food-row"><span>🍪 加餐</span><span>${starchItem.name} ${s.starch}份 (${starchItem.weight*s.starch}g) · 水果: 剩余1份</span></div>
-    `;
-    recipeDiv.innerHTML = recipeHtml;
-}
-
-function updateRecordDisplay() {
-    const progressDiv = document.getElementById('recordProgress');
-    const warningDiv = document.getElementById('recordWarning');
-    const targetSummary = document.getElementById('recordTargetSummary');
-    const dateDisplay = document.getElementById('dateDisplay');
-    if (!progressDiv || !warningDiv || !targetSummary || !dateDisplay) return;
-    
-    if (!currentTarget || typeof currentTarget !== 'object') {
-        progressDiv.innerHTML = '请先设置档案';
-        return;
-    }
-    if (currentTarget.proteinTotal === undefined || currentTarget.potassium === undefined || 
-        currentTarget.phosphorus === undefined || currentTarget.sodium === undefined) {
-        progressDiv.innerHTML = '目标数据不完整，请重新保存档案';
-        return;
-    }
-
-    let todayStr = new Date().toLocaleDateString('zh-CN');
-    dateDisplay.innerText = todayStr;
-    targetSummary.innerHTML = `目标: 蛋白质${currentTarget.proteinTotal}g, 钾${currentTarget.potassium}mg, 磷${currentTarget.phosphorus}mg, 钠${currentTarget.sodium}mg`;
-
-    if (!todayRecord || !todayRecord.intake) {
-        todayRecord = { date: todayStr, intake: { dairy:0, meat:0, veg:0, fruit:0, grain:0, oil:0, starch:0 } };
-    }
-
-    let intake = todayRecord.intake;
-    const defaultIntake = { dairy:0, meat:0, veg:0, fruit:0, grain:0, oil:0, starch:0 };
-    intake = { ...defaultIntake, ...intake };
-
-    let actualProtein = intake.dairy*AVG_NUTRI.dairy.protein + intake.meat*AVG_NUTRI.meat.protein +
-                        intake.veg*AVG_NUTRI.veg.protein + intake.fruit*AVG_NUTRI.fruit.protein +
-                        intake.grain*AVG_NUTRI.grain.protein + intake.oil*AVG_NUTRI.oil.protein +
-                        intake.starch*AVG_NUTRI.starch.protein;
-    let actualK = intake.dairy*AVG_NUTRI.dairy.potassium + intake.meat*AVG_NUTRI.meat.potassium +
-                  intake.veg*AVG_NUTRI.veg.potassium + intake.fruit*AVG_NUTRI.fruit.potassium +
-                  intake.grain*AVG_NUTRI.grain.potassium + intake.oil*AVG_NUTRI.oil.potassium +
-                  intake.starch*AVG_NUTRI.starch.potassium;
-    let actualP = intake.dairy*AVG_NUTRI.dairy.phosphorus + intake.meat*AVG_NUTRI.meat.phosphorus +
-                  intake.veg*AVG_NUTRI.veg.phosphorus + intake.fruit*AVG_NUTRI.fruit.phosphorus +
-                  intake.grain*AVG_NUTRI.grain.phosphorus + intake.oil*AVG_NUTRI.oil.phosphorus +
-                  intake.starch*AVG_NUTRI.starch.phosphorus;
-    let actualNa = intake.dairy*AVG_NUTRI.dairy.sodium + intake.meat*AVG_NUTRI.meat.sodium +
-                  intake.veg*AVG_NUTRI.veg.sodium + intake.fruit*AVG_NUTRI.fruit.sodium +
-                  intake.grain*AVG_NUTRI.grain.sodium + intake.oil*AVG_NUTRI.oil.sodium +
-                  intake.starch*AVG_NUTRI.starch.sodium;
-
-    let proteinPercent = Math.min(100, Math.round(actualProtein / currentTarget.proteinTotal * 100));
-    let kPercent = Math.min(100, Math.round(actualK / currentTarget.potassium * 100));
-    let pPercent = Math.min(100, Math.round(actualP / currentTarget.phosphorus * 100));
-    let naPercent = Math.min(100, Math.round(actualNa / currentTarget.sodium * 100));
-
-    let progressHtml = `
-        <div style="margin:10px 0;">蛋白质: ${actualProtein.toFixed(1)}/${currentTarget.proteinTotal}g</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${proteinPercent}%;">${proteinPercent}%</div></div>
-        <div>钾: ${actualK}/${currentTarget.potassium}mg</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${kPercent}%;">${kPercent}%</div></div>
-        <div>磷: ${actualP}/${currentTarget.phosphorus}mg</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pPercent}%;">${pPercent}%</div></div>
-        <div>钠: ${actualNa}/${currentTarget.sodium}mg</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${naPercent}%;">${naPercent}%</div></div>
-    `;
-    progressDiv.innerHTML = progressHtml;
-
-    let warnings = [];
-    if (actualK > currentTarget.potassium * 1.1) warnings.push('⚠️ 钾摄入超过目标10%！请选择低钾食物。');
-    else if (actualK > currentTarget.potassium) warnings.push('⚠️ 钾摄入略高。');
-    if (actualP > currentTarget.phosphorus * 1.1) warnings.push('⚠️ 磷摄入超过目标10%！请避免高磷食物。');
-    else if (actualP > currentTarget.phosphorus) warnings.push('⚠️ 磷摄入略高。');
-    if (actualNa > currentTarget.sodium * 1.1) warnings.push('⚠️ 钠摄入超过目标10%！请减少盐/调味品。');
-    else if (actualNa > currentTarget.sodium) warnings.push('⚠️ 钠摄入略高，注意清淡。');
-    if (actualProtein > currentTarget.proteinTotal * 1.05) warnings.push('⚠️ 蛋白质摄入超标。');
-    if (warnings.length) {
-        warningDiv.style.display = 'block';
-        warningDiv.innerHTML = warnings.join('<br>');
-    } else {
-        warningDiv.style.display = 'none';
-    }
-
-    const sliderMappings = [
-        { id: 'dairySlider', valId: 'dairyVal', value: intake.dairy },
-        { id: 'meatSlider', valId: 'meatVal', value: intake.meat },
-        { id: 'vegSlider', valId: 'vegVal', value: intake.veg },
-        { id: 'fruitSlider', valId: 'fruitVal', value: intake.fruit },
-        { id: 'grainSlider', valId: 'grainVal', value: intake.grain },
-        { id: 'oilSlider', valId: 'oilVal', value: intake.oil },
-        { id: 'starchSlider', valId: 'starchVal', value: intake.starch }
-    ];
-
-    sliderMappings.forEach(item => {
-        const slider = document.getElementById(item.id);
-        const valSpan = document.getElementById(item.valId);
-        if (slider) slider.value = item.value;
-        if (valSpan) valSpan.innerText = item.value.toFixed(1);
-    });
-}
-
-function renderRecordPage() {
-    updateRecordDisplay();
-    let historyDiv = document.getElementById('historyList');
-    if (!historyDiv) return;
-    let histHtml = '';
-    historyRecords.slice(0,5).forEach((r, idx) => {
-        let totalP = (r.intake.dairy*4 + r.intake.meat*7 + r.intake.veg*1 + r.intake.fruit*1 + r.intake.grain*2).toFixed(1);
-        histHtml += `<div class="history-item">${r.date} 蛋白质摄入: ${totalP}g</div>`;
-    });
-    historyDiv.innerHTML = histHtml || '暂无历史';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    loadFromStorage();
-
-    document.querySelector('.nav').addEventListener('click', function(e) {
-        const item = e.target.closest('.nav-item');
-        if (!item) return;
-        const page = item.dataset.page;
-        if (page) showPage(page);
-    });
-
-    document.getElementById('saveProfile').addEventListener('click', function() {
-        let gender = document.querySelector('input[name="gender"]:checked').value;
-        let height = parseFloat(document.getElementById('height').value);
-        let weight = parseFloat(document.getElementById('weight').value);
-        let ckdStage = parseInt(document.getElementById('ckdStage').value);
-        let bloodK = parseFloat(document.getElementById('bloodK').value);
-        let bloodP = parseFloat(document.getElementById('bloodP').value);
-        let edema = document.getElementById('edema').checked;
-        if (isNaN(height) || height<100) { alert('请输入正确身高'); return; }
-        currentProfile = { gender, height, weight, ckdStage, bloodK, bloodP, edema };
-        saveProfile();
-        let { target, shares } = computeTargetAndShares(currentProfile);
-        currentTarget = target;
-        currentShares = shares;
-        saveTarget();
-        saveShares();
-
-        // 百度统计：保存档案事件
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '档案', '保存', `分期${ckdStage}`]);
-        }
-
-        showPage('target');
-    });
-
-    document.getElementById('gotoRecipeFromTarget').addEventListener('click', function() {
-        // 百度统计：生成食谱
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '食谱', '生成', '从目标页']);
-        }
-        showPage('recipe');
-    });
-
-    document.getElementById('useRecipeForToday').addEventListener('click', function() {
-        if (!currentShares) {
-            alert('请先生成食谱');
-            return;
-        }
-        todayRecord = {
-            date: new Date().toLocaleDateString('zh-CN'),
-            intake: { ...currentShares }
-        };
-        saveToday();
-
-        // 百度统计：使用食谱记录今日
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '记录', '使用食谱', '']);
-        }
-
-        showPage('record');
-    });
-
-    document.getElementById('gotoRecord').addEventListener('click', function() {
-        showPage('record');
-    });
-
-    document.getElementById('showSliderBtn').addEventListener('click', function() {
-        document.getElementById('sliderPanel').style.display = 'block';
-        // 百度统计：打开调整面板
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '记录', '打开调整面板', '']);
-        }
-    });
-
-    function setupSlider(sliderId, valId) {
-        const slider = document.getElementById(sliderId);
-        if (slider) {
-            slider.addEventListener('input', function(e) {
-                const valSpan = document.getElementById(valId);
-                if (valSpan) valSpan.innerText = parseFloat(e.target.value).toFixed(1);
-            });
-        }
-    }
-    setupSlider('dairySlider', 'dairyVal');
-    setupSlider('meatSlider', 'meatVal');
-    setupSlider('vegSlider', 'vegVal');
-    setupSlider('fruitSlider', 'fruitVal');
-    setupSlider('grainSlider', 'grainVal');
-    setupSlider('oilSlider', 'oilVal');
-    setupSlider('starchSlider', 'starchVal');
-
-    document.getElementById('saveSlider').addEventListener('click', function() {
-        if (!todayRecord) {
-            todayRecord = { date: new Date().toLocaleDateString('zh-CN'), intake: {} };
-        }
-        let newIntake = {
-            dairy: parseFloat(document.getElementById('dairySlider')?.value || 0),
-            meat: parseFloat(document.getElementById('meatSlider')?.value || 0),
-            veg: parseFloat(document.getElementById('vegSlider')?.value || 0),
-            fruit: parseFloat(document.getElementById('fruitSlider')?.value || 0),
-            grain: parseFloat(document.getElementById('grainSlider')?.value || 0),
-            oil: parseFloat(document.getElementById('oilSlider')?.value || 0),
-            starch: parseFloat(document.getElementById('starchSlider')?.value || 0)
-        };
-        todayRecord.intake = newIntake;
-        saveToday();
-        document.getElementById('sliderPanel').style.display = 'none';
-        updateRecordDisplay();
-
-        // 百度统计：保存调整摄入
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '记录', '调整摄入保存', JSON.stringify(newIntake)]);
-        }
-    });
-
-    document.getElementById('cancelSlider').addEventListener('click', function() {
-        document.getElementById('sliderPanel').style.display = 'none';
-        if (todayRecord) {
-            let i = todayRecord.intake;
-            const sliderMappings = [
-                { id: 'dairySlider', valId: 'dairyVal', value: i.dairy },
-                { id: 'meatSlider', valId: 'meatVal', value: i.meat },
-                { id: 'vegSlider', valId: 'vegVal', value: i.veg },
-                { id: 'fruitSlider', valId: 'fruitVal', value: i.fruit },
-                { id: 'grainSlider', valId: 'grainVal', value: i.grain },
-                { id: 'oilSlider', valId: 'oilVal', value: i.oil },
-                { id: 'starchSlider', valId: 'starchVal', value: i.starch }
-            ];
-            sliderMappings.forEach(item => {
-                const slider = document.getElementById(item.id);
-                const valSpan = document.getElementById(item.valId);
-                if (slider) slider.value = item.value;
-                if (valSpan) valSpan.innerText = item.value.toFixed(1);
-            });
-        }
-
-        // 百度统计：取消调整
-        if (typeof _hmt !== 'undefined') {
-            _hmt.push(['_trackEvent', '记录', '调整摄入取消', '']);
-        }
-    });
-
-    if (currentProfile) {
-        if (!currentTarget || !currentShares) {
-            let { target, shares } = computeTargetAndShares(currentProfile);
-            currentTarget = target;
-            currentShares = shares;
-            saveTarget(); saveShares();
-        }
-        showPage('target');
-    } else {
-        showPage('profile');
-    }
-});
-</script>
-</body>
+    <script>
+      window.CKD_BAIDU_ANALYTICS_ID = "518c1a8f2fbf8068280278370c342fce";
+    </script>
+    <script src="./analytics.js"></script>
+    <script src="./foods-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
 </html>

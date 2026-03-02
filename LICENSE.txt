@@ -1,0 +1,15 @@
+Copyright (c) 2026 优特能. All rights reserved.
+
+This project, including but not limited to its source code, visual design,
+interaction design, copywriting, food database structure, and business logic,
+is proprietary and confidential.
+
+No person or organization may copy, modify, redistribute, mirror, publish,
+commercialize, or create derivative works from this project, in whole or in
+part, without prior written permission from the copyright owner.
+
+Authorized public access to the deployed website does not grant any license
+to reuse or redistribute its code, assets, or product design.
+
+Official public release:
+https://youteneng.github.io/
