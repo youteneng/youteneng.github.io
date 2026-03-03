@@ -10,6 +10,10 @@
     return typeof window.gtag === "function";
   }
 
+  function hasDataLayer() {
+    return Array.isArray(window.dataLayer);
+  }
+
   function hasClarity() {
     return typeof window.clarity === "function";
   }
@@ -41,6 +45,9 @@
     bootstrap() {},
     track(eventName, params = {}) {
       const payload = normalizeParams(params);
+      if (hasDataLayer()) {
+        window.dataLayer.push({ event: eventName, ...payload });
+      }
       if (hasGtag()) {
         window.gtag("event", eventName, payload);
       }
@@ -53,6 +60,9 @@
       const eventName = pageViewEventMap[pageName];
       const payload = normalizeParams({ page_name: pageName, ...params });
       if (!eventName) return;
+      if (hasDataLayer()) {
+        window.dataLayer.push({ event: eventName, ...payload });
+      }
       if (hasGtag()) {
         window.gtag("event", eventName, payload);
       }
